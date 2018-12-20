@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div id = "body">
+        <div id = "inbox"></div>
+        <form action="/" method="post" id="messageform">
+            <table>
+                <tr>
+                    <td><input id = "message"></td>
+                    <td>
+                       <input type="submit" value="提交">
+                        <input type="hidden" name = "next" vlaue = "{{ request.path }}">
+
+                        {% module xsrf_form_html() %}
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+
+<script src = "/static/jquery-3.1.1.js"></script>
+<script>
+    $(document).ready(function () {
+       if (!window.console)
+           window.console = {};
+       if (!window.console.log)
+           window.console.log = function (){};
+
+       $("#messgageform").live("submit", function () {
+           newMessage($(this));
+           return false;
+       });
+
+       $("#messageform").live("keypress", function (e) {
+          if (e.keyCode == 13){
+              newMessage($(this));
+              return false;
+          }
+       });
+
+       $("#messageform").select();
+       update.start();
+    });
+
+    function newMessage(form) {
+        var message =  form.formToDict();
+        updater.socket.send(JSON.stringify(message));
+        form.find("input[type=text]").val("").select();
+    }
+
+    jQuery.fn.formToDict = function () {
+        var fields = this.serializeArray();
+        var json = {}
+        for (var i = 0; i < fields.length; i++){
+            json[fields[i].name] = fields[i].value;
+        }
+
+        if (json.next)
+            delete json.next;
+        return json;
+    };
+
+    var updater = {
+        socket: null,
+        start: function () {
+            var url = "ws://" + locaction.host + "/chatsocket";
+            update.socket = new WebSocket(url);
+
+            updater.socket.onmessage = fuction(event){
+                updater.showMessage(JSON.parse(event.data));
+            }
+        },
+
+        showMessage: function (message) {
+            var node = $(message.html);
+            node.hide();
+            $("#inbox").append(node);
+            node.slideDown();
+        }
+    };
+</script>
+</html>

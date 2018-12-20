@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id = "group" style="width:200px;height:50px;overflow:auto"></div>
+<div id = "contents" style="width:500px;height:500px;overflow:auto"></div>
+<div>
+    <input type="text" id = "user">
+    <input type="text" id = "message">
+    <button onclick="sendMessage()">发送</button>
+
+    <script src = "/static/jquery-3.1.1.js"></script>
+    <script>
+        var ws = new WebSocket("ws://192.168.1.250:8888/chat")
+        var group_info = document.getElementById("group");
+        ws.onmessage = function (e) {
+            console.log(e);
+            var data = e.data;
+
+            var data_obj = JSON.parse(data);
+            var user = data_obj.user;
+            var group = data_obj.group;
+
+            $('#user').val(user);
+            $('#contents').append("<p>" + data_obj.data + "</p>");
+            group_info.innerHTML = group;
+        }
+
+        function sendMessage() {
+            var msg= $("#message").val();
+            var user = $("#user").val();
+
+            var data = {
+                "message":msg,
+                "user":user
+            };
+            str = JSON.stringify(data);
+            ws.send(str);
+
+            $("#message").val("")
+        }
+    </script>
+</div>
+</body>
+</html>
